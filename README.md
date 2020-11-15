@@ -1,2 +1,2 @@
 # PokemonApp
- Pokemon tuturial app
+ tutorial application
