@@ -1,2 +1,2 @@
 # PokemonApp
- Pokemon app tuturial
+ Pokemon tuturial app
