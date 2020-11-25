@@ -5,17 +5,18 @@ logBar.classList.add(`log-bar`);
 
 let logBarInit = false;
 
-
 const character = {
   name: `Pikachu`,
   defaultHP: 100,
   damageHP: 100,
   elHP: getElement(`#health-character`),
   elProgressBar: getElement(`#progressbar-character`),
-  changeHP: changeHP,
-  renderHP: renderHP,
-  renderHPLife: renderHPLife,
-  renderProgressBar: renderProgressBar,
+  changeHP,
+  renderHP,
+  renderHPLife,
+  renderProgressBar,
+  clickCount: 0,
+  maxClickQuantity: 6,
 }
 
 const enemy = {
@@ -24,15 +25,23 @@ const enemy = {
   damageHP: 200,
   elHP: getElement(`#health-enemy`),
   elProgressBar: getElement(`#progressbar-enemy`),
-  changeHP: changeHP,
-  renderHP: renderHP,
-  renderHPLife: renderHPLife,
-  renderProgressBar: renderProgressBar,
+  changeHP,
+  renderHP,
+  renderHPLife,
+  renderProgressBar,
+  clickCount: 0,
+  maxClickQuantity: 6,
 }
 
 function getElement(id) {
   return document.querySelector(id);
 }
+
+function getEnding(number, txt) {
+  var cases = [2, 0, 1, 1, 1, 2];
+  return txt[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+}
+
 
 function renderHPLife() {
   this.elHP.innerText = `${this.damageHP} / ${this.defaultHP}`;
@@ -80,10 +89,28 @@ function randomNumber(num) {
   return Math.ceil(Math.random() * num);
 }
 
-function onButtonClick(event) {
-  const currentPerson = event.target.id === `btn-kick` ? enemy : character;
-  currentPerson.changeHP(randomNumber(20));
+function addClick(person, btn) {
+  if (person.clickCount < person.maxClickQuantity - 1) {
+    console.log(++person.clickCount);
+    console.log(`у ${person.name} осталось ${person.maxClickQuantity - person.clickCount} ${getEnding((person.maxClickQuantity - person.clickCount), ['удар', 'удара', 'ударов'])}`)
+
+  } else {
+    console.log(++person.clickCount);
+    console.log(`Ударов больше нет!`);
+    btn.removeEventListener(`click`, onButtonClick);
+    btn.disabled = true;
+  }
 }
+
+function onButtonClick(event) {
+  const currentBtn = event.target;
+  const currentHittingPerson = event.target.id === `btn-kick` ? character : enemy;
+  const currentTargetPerson = event.target.id === `btn-kick` ? enemy : character;
+  currentTargetPerson.changeHP(randomNumber(20));
+
+  addClick(currentHittingPerson, currentBtn);
+}
+
 
 function generateLog(firstPerson, secondPerson) {
   const {name: firstName} = firstPerson;
@@ -110,6 +137,8 @@ function init() {
   for (let btn of btns) {
     btn.addEventListener(`click`, onButtonClick);
   }
+
+
   character.renderHP();
   enemy.renderHP();
 }
