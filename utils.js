@@ -1,6 +1,15 @@
-import getRandomNumber from './getRandomNumber.js';
+const playground = document.querySelector(`.playground`);
+const logBar = document.createElement(`div`);
+let logBarInit = false;
 
-export default function getLog(hitting, recipient) {
+logBar.classList.add(`log-bar`);
+
+// const getEnding = (number, txt) => {
+//   const cases = [2, 0, 1, 1, 1, 2];
+//   return txt[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+// }
+
+const getLog = (hitting, recipient) => {
   const {name: hittingName} = hitting;
   const {name: recipientName} = recipient;
 
@@ -17,5 +26,43 @@ export default function getLog(hitting, recipient) {
     `${recipientName} пытался что-то сказать, но вдруг, неожиданно ${hittingName} со скуки, разбил бровь сопернику.`
   ];
 
-  return logs[getRandomNumber(logs.length) - 1];
+  return logs[randomInteger(0, logs.length - 1)];
+}
+
+export const randomInteger = (min, max) => {
+  let rand = min + Math.random() * (max + 1 - min);
+  return Math.floor(rand);
+}
+
+export const checkHP = (person) => {
+  return person.hp.current > 0 ? true : false;
+};
+
+
+export const renderLog = (hittingPerson, targetPerson) => {
+  const paragraph = document.createElement(`p`);
+  const log = getLog(hittingPerson, targetPerson);
+
+  paragraph.innerText = `${log} теперь у ${targetPerson.name} [${targetPerson.hp.current}/${targetPerson.hp.total}] очков здоровья`;
+
+  if (!logBarInit) {
+    playground.after(logBar);
+    logBarInit = true;
+  }
+
+  logBar.insertBefore(paragraph, logBar.children[0]);
+  if (!checkHP(targetPerson)) {
+    paragraph.innerText = `${targetPerson.name} проиграл!`;
+    logBar.insertBefore(paragraph, logBar.children[0]);
+  }
+}
+
+export const getRandomAttack = (person) => {
+  let currentAttack = person.attacks[randomInteger(0, person.attacks.length - 1)];
+  if (currentAttack.maxCount > 0) {
+    currentAttack.maxCount;
+    return currentAttack;
+  } else {
+    getRandomAttack(person);
+  }
 }
