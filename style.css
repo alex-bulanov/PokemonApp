@@ -40,6 +40,7 @@ body {
     position: relative;
     margin: 20px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
@@ -266,6 +267,7 @@ body {
 }
 
 .button {
+    margin-bottom: 10px;
     position: relative;
     background: white;
     border: 2px solid #ffc55b;
@@ -276,7 +278,6 @@ body {
     outline: none !important;
     cursor: pointer;
     font-size: 18px;
-
 }
 .button:after {
     content: "";
@@ -299,6 +300,10 @@ body {
     background: -webkit-gradient(linear, left top, left bottom, from(#ffd78e), to(#ffc55b));
     background: linear-gradient(to bottom, #ffd78e, #ffc55b);
     box-shadow: 0 0 5px 2px white, 0 0 15px #ffe9c1, 0 3px 5px -2px rgba(0, 0, 0, 0.2);
+}
+
+.button:last-of-type {
+    margin-bottom: 0;
 }
 
 .candy {
