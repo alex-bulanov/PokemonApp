@@ -6,24 +6,29 @@ const hpLevel = {
 }
 
 class Pokemon extends Selectors {
-  constructor({name, img, hp, type, selector, attacks}) {
+  constructor({name, img, hp, type, selector, attacks, id}) {
     super(selector);
-
+    this.id = id;
     this.name = name;
     this.hp = {
       current: hp,
       total: hp
     };
 
-    this.lvl = 1;
+    this._eventBtnOk = null;
+    this._eventBtnCancel = null;
 
+    this._callback1 = null;
+    this._callback2 = null;
+
+    this.lvl = 1;
     this.selector = selector;
     this.img = img;
     this.type = type;
     this.attacks = attacks;
 
     if (selector === `player1`) {
-      this.renderBtn();
+      this.renderBtns();
     }
 
     this.renderName();
@@ -74,7 +79,7 @@ class Pokemon extends Selectors {
     }
   }
 
-  renderBtn = () => {
+  renderBtns = () => {
     this.control.innerText = ``;
     this.attacks.forEach(element => {
       const btn = document.createElement(`button`);
@@ -85,6 +90,65 @@ class Pokemon extends Selectors {
       btn.dataset.count = element.maxCount;
       this.control.appendChild(btn);
     })
+  }
+
+  removeBtns = () => {
+    this.control.innerText = ``;
+  }
+
+  _onBtnOkClick = () => {
+    this._callback1();
+    this._eventBtnOk.removeEventListener(`click`, this._onBtnOkClick);
+    this._eventBtnCancel.removeEventListener(`click`, this._onBtnCancelClick);
+  }
+
+  _onBtnCancelClick = () => {
+    this._callback2();
+    this._eventBtnOk.removeEventListener(`click`, this._onBtnOkClick);
+    this._eventBtnCancel.removeEventListener(`click`, this._onBtnCancelClick);
+  }
+
+  _createRestartBtn = () => {
+    this._eventBtnOk = document.createElement(`button`);
+    this._eventBtnOk.classList.add(`button`);
+    this._eventBtnOk.innerText = `restart`;
+    this.control.appendChild(this._eventBtnOk);
+  }
+
+  _createCancelBtn = () => {
+    this._eventBtnCancel = document.createElement(`button`);
+    this._eventBtnCancel.classList.add(`button`);
+    this._eventBtnCancel.innerText = `cancel`;
+    this.control.appendChild(this._eventBtnCancel);
+  }
+
+  _createContinueBtn = () => {
+    this._eventBtnOk = document.createElement(`button`);
+    this._eventBtnOk.classList.add(`button`);
+    this._eventBtnOk.innerText = `continue`;
+    this.control.appendChild(this._eventBtnOk);
+  }
+
+  handleRestart = (callback1, callback2) => {
+    this._createRestartBtn();
+    this._createCancelBtn();
+
+    this._callback1 = callback1;
+    this._callback2 = callback2;
+
+    this._eventBtnOk.addEventListener(`click`, this._onBtnOkClick);
+    this._eventBtnCancel.addEventListener(`click`, this._onBtnCancelClick);
+  }
+
+  handleСontinuation = (callback1, callback2) => {
+    this._createContinueBtn();
+    this._createCancelBtn();
+
+    this._callback1 = callback1;
+    this._callback2 = callback2;
+
+    this._eventBtnOk.addEventListener(`click`, this._onBtnOkClick);
+    this._eventBtnCancel.addEventListener(`click`, this._onBtnCancelClick);
   }
 }
 
