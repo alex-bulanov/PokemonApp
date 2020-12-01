@@ -38,7 +38,6 @@ export const checkHP = (person) => {
   return person.hp.current > 0 ? true : false;
 };
 
-
 export const renderLog = (hittingPerson, targetPerson) => {
   const paragraph = document.createElement(`p`);
   const log = getLog(hittingPerson, targetPerson);
@@ -50,11 +49,31 @@ export const renderLog = (hittingPerson, targetPerson) => {
     logBarInit = true;
   }
 
-  logBar.insertBefore(paragraph, logBar.children[0]);
-  if (!checkHP(targetPerson)) {
-    paragraph.innerText = `${targetPerson.name} проиграл!`;
-    logBar.insertBefore(paragraph, logBar.children[0]);
-  }
+  logBar.prepend(paragraph);
+}
+
+export const renderLoseLog = (player1) => {
+  const paragraph = document.createElement(`p`);
+  paragraph.innerText = `Поражение! Максимальный уровень ${player1.lvl}. Нажмите Restart, чтобы начать заново или Cancel для завершения`;
+  logBar.prepend(paragraph);
+}
+
+export const renderWinLog = (player1) => {
+  const paragraph = document.createElement(`p`);
+  paragraph.innerText = `Победа! Теперь Ваш уровень ${player1.lvl}. Нажмите Continue, чтобы продожить или Cancel для завершения`;
+  logBar.prepend(paragraph);
+}
+
+export const renderFinishLog = () => {
+  const paragraph = document.createElement(`p`);
+  paragraph.innerText = `Нажмите F5, чтобы начать`;
+  logBar.prepend(paragraph);
+}
+
+export const removeLog = () => {
+  logBarInit = false;
+  logBar.innerHTML = ``;
+  logBar.remove();
 }
 
 export const getRandomAttack = (person) => {

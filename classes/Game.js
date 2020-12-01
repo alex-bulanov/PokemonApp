@@ -1,46 +1,61 @@
+import {checkHP, renderLog, removeLog, renderLoseLog, renderWinLog, renderFinishLog} from '../utils.js';
 import Pokemon from './Pokemon.js';
-import {randomInteger, checkHP, renderLog, getRandomAttack} from '../utils.js';
+import Api from './Api.js';
 
 class Game {
-  constructor(pokemons) {
-    this._pokemons = pokemons;
+  constructor() {
+    this._pokemons = null;
     this.player1 = null;
     this.player2 = null;
     this.btns = null;
     this._onButtonClick = this._onButtonClick.bind(this);
-    this._playersSet = null;
+    this.restart = this.restart.bind(this);
+    this.сancel = this.сancel.bind(this);
+
+    this._api = new Api('https://reactmarathon-api.netlify.app/api/');
   };
 
-  _getPlayer() {
-    for (let i = 0; i < this._pokemons.length; i++) {
-      const currentNewPlayer = this._pokemons[randomInteger(0, this._pokemons.length - 1)];
-      if (!this._playersSet.has(currentNewPlayer)) {
-        this._playersSet.add(currentNewPlayer);
-        return currentNewPlayer;
-      }
+  _addListener() {
+    this.btns = document.querySelectorAll(`button`);
+
+    for (let btn of this.btns) {
+      btn.removeAttribute(`disabled`);
+      btn.addEventListener(`click`, this._onButtonClick);
     }
   }
 
-  _attack(hittingPerson, targetPerson, attack) {
-    targetPerson.changeHP(randomInteger(attack.minDamage, attack.maxDamage));
+  _removeListener() {
+    for (let btn of this.btns) {
+      btn.removeEventListener(`click`, this._onButtonClick);
+      btn.disabled = true;
+    }
+  }
 
-    if (checkHP(targetPerson)) {
-      renderLog(hittingPerson, targetPerson);
+  _attack = async (player1, player2, attackParam) => {
+    const attack = await this._api.getAttack(attackParam);
+    player2.changeHP(attack.kick.player1);
+    player1.changeHP(attack.kick.player2);
+
+    if (checkHP(player1)) {
+      renderLog(player1, player2);
     } else {
-      renderLog(hittingPerson, targetPerson);
+      this._removeListener();
+      player1.removeBtns();
+      player1.handleRestart(this.restart, this.сancel);
+    }
 
-      if (targetPerson.selector === `player1`) {
-        setTimeout(() => {
-          if (confirm(`Оууу Поражение! Максимальный уровень ${targetPerson.lvl} ! Играем снова?`)) {
-            this.start();
-          }
-        }, 100);
-      }
-
-      for (let btn of this.btns) {
-        btn.removeEventListener(`click`, this._onButtonClick);
-        btn.disabled = true;
-      }
+    if (checkHP(player2)) {
+      renderLog(player2, player1);
+    } else {
+      this._removeListener();
+      player1.lvl++;
+      player1.renderLVL();
+      player1.removeBtns();
+      player1.handleСontinuation(this.continue, this.сancel);
+      renderWinLog(player1);
+    }
+    if (!checkHP(player1)) {
+      renderLoseLog(player1);
     }
   }
 
@@ -58,38 +73,17 @@ class Game {
   }
 
   _onButtonClick(event) {
-    const currentBtn = event.target;
-    const currentHittingPerson = event.target.dataset.player === `player1` ? this.player1 : this.player2;
-    const currentTargetPerson = event.target.dataset.player === `player1` ? this.player2 : this.player1;
-
-    const currentHittingPersonAttack = currentHittingPerson.attacks.find(item => item[`name`] === currentBtn.dataset.name);
-
-    this._addClick(currentHittingPerson, currentBtn);
-
-    this._attack(currentHittingPerson, currentTargetPerson, currentHittingPersonAttack);
-
-    if (checkHP(currentTargetPerson)) {
-      this._attack(currentTargetPerson, currentHittingPerson, getRandomAttack(currentTargetPerson));
-    } else {
-      setTimeout(() => {
-        currentHittingPerson.lvl++;
-        currentHittingPerson.renderLVL();
-        if (confirm(`Победа! Продолжаем играть?`)) {
-          this._resume()
-        }
-      }, 100)
-    }
-  }
-
-  _resume() {
-    this._reset();
-    this.player2 = new Pokemon({
-      ...this._getPlayer(),
-      selector: `player2`,
-    });
+    const currentAttack = this.player1.attacks.find(item => item[`name`] === event.target.dataset.name);
+    const currentAttackParam = `player1id=${this.player1.id}&attackId=${currentAttack.id}&player2id=${this.player2.id}`;
+    this._addClick(this.player1, event.target);
+    this._attack(this.player1, this.player2, currentAttackParam);
   }
 
   _reset() {
+    if (document.querySelector(`.log-bar`)) {
+      removeLog();
+    }
+
     const playersHealth = document.querySelectorAll(`.health`);
 
     for (let playerHealth of playersHealth) {
@@ -101,34 +95,45 @@ class Game {
       }
     }
 
-    this.btns = document.querySelectorAll(`button`);
-
-    for (let btn of this.btns) {
-      btn.removeAttribute(`disabled`);
-      btn.addEventListener(`click`, this._onButtonClick);
-    }
+    this._addListener();
   }
 
-  start() {
-    this._playersSet = new Set();
+  сancel() {
+    this.player1.removeBtns();
+    renderFinishLog();
+  }
+
+  restart() {
+    this.player1.removeBtns();
+    this._reset();
+    this.start();
+  }
+
+  continue = async () => {
+    this.player1.removeBtns();
+    this.player1.renderBtns();
+
+    this._reset();
+    this.player2 = new Pokemon({
+      ...await this._api.getRandomPokemon(),
+      selector: `player2`,
+    });
+  }
+
+  start = async () => {
     this._reset();
 
     this.player1 = new Pokemon({
-      ...this._getPlayer(),
+      ...await this._api.getRandomPokemon(),
       selector: `player1`,
     });
 
     this.player2 = new Pokemon({
-      ...this._getPlayer(),
+      ...await this._api.getRandomPokemon(),
       selector: `player2`,
     });
 
-    this.btns = document.querySelectorAll(`button`);
-
-    for (let btn of this.btns) {
-      btn.removeAttribute(`disabled`);
-      btn.addEventListener(`click`, this._onButtonClick);
-    }
+    this._addListener();
   }
 }
 
